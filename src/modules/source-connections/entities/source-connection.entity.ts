@@ -31,7 +31,7 @@ export class SourceConnection {
 
   @Column()
   @Exclude()
-  password?: string;
+  password: string;
 
   @ApiProperty()
   @Column()
