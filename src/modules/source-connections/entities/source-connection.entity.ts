@@ -1,5 +1,7 @@
-import { PrimaryGeneratedColumn, Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { SupportedSourceConnectionType } from '../source-connections.type';
+import { Exclude } from 'class-transformer';
 
 @Entity('source_connections')
 export class SourceConnection {
@@ -13,7 +15,7 @@ export class SourceConnection {
 
   @ApiProperty()
   @Column()
-  type: 'mysql' | 'postgresql';
+  type: SupportedSourceConnectionType;
 
   @ApiProperty()
   @Column()
@@ -28,7 +30,8 @@ export class SourceConnection {
   username: string;
 
   @Column()
-  password?: string; // Ensure passwords are masked or not included in responses, adhering to security best practices
+  @Exclude()
+  password?: string;
 
   @ApiProperty()
   @Column()
