@@ -6,6 +6,7 @@ import { SourceConnection } from './entities/source-connection.entity';
 import { Repository } from 'typeorm';
 import { TestSourceDto } from './dto/test-source.dto';
 import { ConnectionService } from '../connection/connection.service';
+import { SupportedSourceConnectionType } from './source-connections.type';
 
 @Injectable()
 export class SourceConnectionsService {
@@ -25,20 +26,86 @@ export class SourceConnectionsService {
     return this.sourceConnectionRepository.save(sourceConnection);
   }
 
-  findAll() {
-    return `This action returns all sourceConnections`;
+  async findAll(
+    name?: string,
+    hostname?: string,
+    type?: SupportedSourceConnectionType,
+  ): Promise<SourceConnection[]> {
+    //  Do NOT return passwords.
+    const where: any = {};
+    if (name) {
+      where.name = name;
+    }
+    if (hostname) {
+      where.host = hostname;
+    }
+    if (type) {
+      where.type = type;
+    }
+    const sources = await this.sourceConnectionRepository.find(where);
+    return sources.map((source) => {
+      return { ...source, password: undefined };
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} sourceConnection`;
+  async findOne(
+    id: number,
+    name?: string,
+    hostname?: string,
+    type?: SupportedSourceConnectionType,
+  ): Promise<SourceConnection> {
+    const where: any = { id };
+    if (name) {
+      where.name = name;
+    }
+    if (hostname) {
+      where.host = hostname;
+    }
+    if (type) {
+      where.type = type;
+    }
+    const sourceConnection =
+      await this.sourceConnectionRepository.findOneBy(where);
+    if (!sourceConnection) {
+      throw new HttpException(
+        'Source connection not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return sourceConnection;
   }
 
-  update(id: number, updateSourceConnectionDto: UpdateSourceDto) {
-    return `This action updates a #${id} sourceConnection`;
+  async update(id: number, updateSourceConnectionDto: UpdateSourceDto) {
+    const existingSource = await this.sourceConnectionRepository.findOneBy({
+      id,
+    });
+    if (!existingSource) {
+      throw new HttpException(
+        'Source connection not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    await this.testConnection({
+      ...updateSourceConnectionDto,
+      type: existingSource.type,
+    });
+
+    // Update entity and save.
+    this.sourceConnectionRepository.merge(
+      existingSource,
+      updateSourceConnectionDto,
+    );
+    return this.sourceConnectionRepository.save(existingSource);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} sourceConnection`;
+  async remove(id: number) {
+    const result = await this.sourceConnectionRepository.delete(id);
+    if (result.affected === 0) {
+      throw new HttpException(
+        'Source connection not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   async testConnection(testSourceDto: TestSourceDto): Promise<{

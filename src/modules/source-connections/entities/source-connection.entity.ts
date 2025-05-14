@@ -29,9 +29,9 @@ export class SourceConnection {
   @Column()
   username: string;
 
-  @Column()
+  @Column({ nullable: false })
   @Exclude()
-  password: string;
+  password?: string;
 
   @ApiProperty()
   @Column()
