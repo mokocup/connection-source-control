@@ -134,3 +134,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+.vscode
+*.launch
+.settings/
+*.sublime-workspace
