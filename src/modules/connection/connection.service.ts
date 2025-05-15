@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { TestSourceDto } from '../source-connections/dto/test-source.dto';
 import { createConnection } from 'mysql2/promise';
 import { SUPPORTED_SOURCE_CONNECTIONS } from '../../constant/constant';
@@ -43,6 +43,30 @@ export class ConnectionService {
         canConnect: false,
       },
     };
+  }
+
+  async getTables(config: TestSourceDto): Promise<string[]> {
+    if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
+      throw new HttpException(
+        `Connection type not allowed`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    try {
+      if (config.type === 'mysql') {
+        return await this._getTablesMySql(config);
+      }
+      if (config.type === 'postgresql') {
+        return await this._getTablesPostgresql(config);
+      }
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve tables: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return [];
   }
 
   private async _testConnectionMySql(config: TestSourceDto) {
@@ -182,5 +206,43 @@ export class ConnectionService {
     }
 
     return results;
+  }
+
+  private async _getTablesMySql(config: TestSourceDto) {
+    const connection = await createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    const [results] = await connection.query('SHOW TABLES');
+    await connection.end();
+    // Data return in Array Object type Key_DBName:Value. Need map out to get real table name
+    // Since we fetch table of a database, the key is same for every table , just need get first one as key
+    const tableNameKey = Object.keys(results[0])[0];
+    return (results as unknown as { [key: string]: string }[]).map(
+      (row) => row[tableNameKey],
+    );
+  }
+
+  private async _getTablesPostgresql(config: TestSourceDto) {
+    const client = new PostgresClient({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    await client.connect();
+    const query = format(
+      `SELECT table_name
+       FROM information_schema.tables
+       WHERE table_schema = %L AND table_type = 'BASE TABLE'`,
+      config.schema,
+    );
+    const result = await client.query(query);
+    await client.end();
+    return result.rows.map((row) => row.table_name);
   }
 }

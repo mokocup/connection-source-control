@@ -10,5 +10,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [ConnectionModule, TypeOrmModule.forFeature([SourceConnection])],
   controllers: [SourceConnectionsController],
   providers: [SourceConnectionsService, ConnectionService],
+  exports: [
+    SourceConnectionsService,
+    ConnectionService,
+    TypeOrmModule.forFeature([SourceConnection]),
+  ],
 })
 export class SourceConnectionsModule {}

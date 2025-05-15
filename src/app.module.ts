@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { SourceConnectionsModule } from './modules/source-connections/source-connections.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { SchemaModule } from './modules/schema/schema.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ConfigModule } from '@nestjs/config';
       migrations: [__dirname + '/database/migrations/**/*{.ts,.js}'],
     }),
     SourceConnectionsModule,
+    SchemaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
