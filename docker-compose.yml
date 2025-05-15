@@ -1,0 +1,54 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    # entrypoint: tail -f > /dev/null
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    depends_on:
+      - db
+      # volumes:
+      # - .:/usr/src/app
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: connection-source-control
+      MYSQL_USER: source_control
+      MYSQL_PASSWORD: source_control_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 55
+
+  mysql-test-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: test_root_password
+      MYSQL_DATABASE: mysql-connection-source-control
+      MYSQL_USER: root
+      MYSQL_PASSWORD: mysql_password
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+
+  postgres-test-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: test_postgres_password
+      POSTGRES_DB: pg-connection-source-control
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+volumes:
+  mysql_test_data:
+  postgres_test_data:
+  mysql_data:
