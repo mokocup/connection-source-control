@@ -69,6 +69,95 @@ export class ConnectionService {
     return [];
   }
 
+  async _getTableSchemaMySql(config: TestSourceDto, tableName: string) {
+    const connection = await createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    const [results] = await connection.query('DESCRIBE ??', tableName);
+    await connection.end();
+    // Data return in Array Object type Key_DBName:Value. Need map out to get real table name
+    // Since we fetch table of a database, the key is same for every table , just need get first one as key
+    return (results as unknown as { [key: string]: string }[]).map((row) => ({
+      columnName: row.Field,
+      dataType: row.Type,
+      isPrimaryKey: row.Key === 'PRI',
+    }));
+  }
+
+  async _getTableSchemaPosgresql(config: TestSourceDto, tableName: string) {
+    const client = new PostgresClient({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    await client.connect();
+    const query_column = format(
+      `SELECT column_name,
+              data_type,
+              null as constraint_type
+       FROM information_schema.columns
+       WHERE table_schema = %L
+         AND table_name = %L`,
+      config.schema,
+      tableName,
+    );
+
+    const query_pk_column = format(
+      `SELECT c.column_name, c.data_type, tc.constraint_type
+       FROM information_schema.table_constraints tc
+              JOIN information_schema.constraint_column_usage AS ccu
+                   USING (constraint_schema, constraint_name)
+              JOIN information_schema.columns AS c ON c.table_schema = tc.constraint_schema
+         AND tc.table_name = c.table_name AND ccu.column_name = c.column_name
+       WHERE constraint_type = 'PRIMARY KEY'
+         and c.table_schema = %L
+         and tc.table_name = %L;`,
+      config.schema,
+      tableName,
+    );
+    const result = await client.query(
+      `${query_column} union ${query_pk_column}`,
+    );
+    await client.end();
+    return result.rows.map((row) => {
+      return {
+        columnName: row.column_name,
+        dataType: row.data_type,
+        isPrimaryKey: row.constraint_type === 'PRIMARY KEY',
+      };
+    });
+  }
+
+  async getTableSchema(config: TestSourceDto, tableName: string) {
+    if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
+      throw new HttpException(
+        `Connection type not allowed`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    try {
+      if (config.type === 'mysql') {
+        return await this._getTableSchemaMySql(config, tableName);
+      }
+      if (config.type === 'postgresql') {
+        return await this._getTableSchemaPosgresql(config, tableName);
+      }
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve tables: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return [];
+  }
+
   private async _testConnectionMySql(config: TestSourceDto) {
     const connection = await createConnection({
       host: config.host,

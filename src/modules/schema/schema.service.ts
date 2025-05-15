@@ -14,4 +14,10 @@ export class SchemaService {
     // @ts-ignore
     return this.connectionService.getTables(source);
   }
+
+  async getTableSchema(sourceId: number, tableName: string) {
+    const source = await this.sourceConnectionsService.findOne(sourceId); // Use service
+    // @ts-ignore
+    return this.connectionService.getTableSchema(source, tableName);
+  }
 }
