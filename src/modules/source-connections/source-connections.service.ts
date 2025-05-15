@@ -108,11 +108,7 @@ export class SourceConnectionsService {
     }
   }
 
-  async testConnection(testSourceDto: TestSourceDto): Promise<{
-    success: boolean;
-    message: string;
-    details?: any;
-  }> {
+  async testConnection(testSourceDto: TestSourceDto) {
     let result: {
       success: boolean;
       message: string;

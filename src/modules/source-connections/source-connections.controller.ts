@@ -151,6 +151,7 @@ export class SourceConnectionsController {
   }> {
     const source = await this.sourceConnectionsService.findOne(id);
 
+    // @ts-ignore
     return this.sourceConnectionsService.testConnection(source);
   }
 }

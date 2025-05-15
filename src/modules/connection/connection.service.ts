@@ -29,13 +29,19 @@ export class ConnectionService {
       return {
         success: false,
         message: 'Connection failed.',
-        details: { error: (error as Error).message },
+        details: {
+          canConnect: false,
+          error: (error as Error).message,
+        },
       };
     }
 
     return {
       success: false,
       message: 'Method not found.',
+      details: {
+        canConnect: false,
+      },
     };
   }
 
@@ -62,19 +68,26 @@ export class ConnectionService {
     const versionCheck = version >= 5.5 && (version >= 8 || version < 6); //simplified version check
     await connection.end();
 
+    const results = {
+      success: true,
+      message: 'Connection successful',
+      details: {
+        canConnect: true,
+        versionSupported: true,
+      },
+    };
     if (!versionCheck) {
-      return {
+      Object.assign(results, {
         success: false,
         message: 'MySQL Version Not Supported',
-        details: { version, supported: '>=5.5 and < 6 or >= 8' },
-      };
+        details: {
+          ...results,
+          versionSupported: false,
+        },
+      });
     }
 
-    return {
-      success: true,
-      message: 'Connection successful, and version is supported.',
-      details: { version },
-    };
+    return results;
   }
 
   private async _checkCreatePrivilegesPostgreSQL(
@@ -137,23 +150,37 @@ export class ConnectionService {
 
     await client.end();
 
+    const results = {
+      success: true,
+      message: 'Connection successful',
+      details: {
+        canConnect: true,
+        versionSupported: true,
+        hasCreatePrivilege: true,
+      },
+    };
     if (!versionCheck) {
-      return {
+      Object.assign(results, {
         success: false,
         message: 'PostgreSQL Version Not Supported',
-        details: { version: versionString, supported: '>=10' },
-      };
+        details: {
+          ...results,
+          versionSupported: false,
+        },
+      });
     }
+
     if (!hasCreatePrivilege) {
-      return {
+      Object.assign(results, {
         success: false,
-        message: 'User does not have CREATE privilege.',
-      };
+        message: 'User does not have CREATE privilege',
+        details: {
+          ...results,
+          hasCreatePrivilege: false,
+        },
+      });
     }
-    return {
-      success: true,
-      message: 'Connection successful, and version is supported.',
-      details: { version: versionString },
-    };
+
+    return results;
   }
 }
