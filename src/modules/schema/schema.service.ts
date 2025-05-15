@@ -20,4 +20,10 @@ export class SchemaService {
     // @ts-ignore
     return this.connectionService.getTableSchema(source, tableName);
   }
+
+  async getSampleData(sourceId: number, tableName: string, limit: number) {
+    const source = await this.sourceConnectionsService.findOne(sourceId); // Use service
+    // @ts-ignore
+    return this.connectionService.getSampleData(source, tableName, limit);
+  }
 }

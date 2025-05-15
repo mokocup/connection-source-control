@@ -79,8 +79,6 @@ export class ConnectionService {
     });
     const [results] = await connection.query('DESCRIBE ??', tableName);
     await connection.end();
-    // Data return in Array Object type Key_DBName:Value. Need map out to get real table name
-    // Since we fetch table of a database, the key is same for every table , just need get first one as key
     return (results as unknown as { [key: string]: string }[]).map((row) => ({
       columnName: row.Field,
       dataType: row.Type,
@@ -156,6 +154,78 @@ export class ConnectionService {
     }
 
     return [];
+  }
+
+  async getSampleData(
+    config: TestSourceDto,
+    tableName: string,
+    limit: number,
+  ): Promise<any[]> {
+    if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
+      throw new HttpException(
+        `Connection type not allowed`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+    try {
+      if (config.type === 'mysql') {
+        return await this._getSampleDataMySql(config, tableName, limit);
+      }
+      if (config.type === 'postgresql') {
+        return await this._getSampleDataPosgresql(config, tableName, limit);
+      }
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve tables: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return [];
+  }
+
+  async _getSampleDataMySql(
+    config: TestSourceDto,
+    tableName: string,
+    limit: number,
+  ) {
+    const connection = await createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    const [results] = await connection.query('SELECT * FROM ?? LIMIT ?', [
+      tableName,
+      limit,
+    ]);
+    await connection.end();
+    return results as any[];
+  }
+
+  async _getSampleDataPosgresql(
+    config: TestSourceDto,
+    tableName: string,
+    limit: number,
+  ) {
+    const client = new PostgresClient({
+      host: config.host,
+      port: config.port,
+      user: config.username,
+      password: config.password,
+      database: config.database,
+    });
+    await client.connect();
+    const query = format(
+      `SELECT *
+       FROM %I LIMIT %s`,
+      `${config.schema}.${tableName}`,
+      limit,
+    );
+    const result = await client.query(query);
+    await client.end();
+    return result.rows;
   }
 
   private async _testConnectionMySql(config: TestSourceDto) {
