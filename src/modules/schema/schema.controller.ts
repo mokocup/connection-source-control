@@ -20,33 +20,33 @@ export class SchemaController {
     return this.schemaService.getTables(sourceId);
   }
 
-  @Get(':sourceId/schema')
+  @Get(':sourceId/:tableName/schema')
   @ApiOperation({ summary: 'Get the schema for a table' })
   @ApiParam({
     name: 'sourceId',
     type: 'integer',
     description: 'ID of the source connection',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'tableName',
     type: 'string',
     description: 'Name of the table',
   })
   async getTableSchema(
     @Param('sourceId', ParseIntPipe) sourceId: number,
-    @Query('tableName') tableName: string,
+    @Param('tableName') tableName: string,
   ) {
     return this.schemaService.getTableSchema(sourceId, tableName);
   }
 
-  @Get(':sourceId/data')
+  @Get(':sourceId/:tableName/data')
   @ApiOperation({ summary: 'Get sample data from a table' })
   @ApiParam({
     name: 'sourceId',
     type: 'integer',
     description: 'ID of the source connection',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'tableName',
     type: 'string',
     description: 'Name of the table',
@@ -59,7 +59,7 @@ export class SchemaController {
   })
   async getSampleData(
     @Param('sourceId', ParseIntPipe) sourceId: number,
-    @Query('tableName') tableName: string,
+    @Param('tableName') tableName: string,
     @Query('limit', new MinMaxPipe({ min: 1, max: 100 })) limit: number = 10,
   ) {
     return this.schemaService.getSampleData(sourceId, tableName, limit);
