@@ -9,6 +9,8 @@ services:
       - .env
     depends_on:
       - db
+      - db-seed-mysql
+      - db-seed-pg
       # volumes:
       # - .:/usr/src/app
 
@@ -18,8 +20,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: connection-source-control
-      MYSQL_USER: source_control
-      MYSQL_PASSWORD: source_control_password
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -29,7 +29,7 @@ services:
       timeout: 5s
       retries: 55
 
-  mysql-seed-db:
+  db-seed-mysql:
     build:
       dockerfile: dbseed.Dockerfile
     restart: unless-stopped
@@ -45,8 +45,17 @@ services:
   db-seed-pg:
     image: mcekovic/uts-database
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
     ports:
-      - 5433:5432
+      - 3001:8080
 
 volumes:
   db_data:
