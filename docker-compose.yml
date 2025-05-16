@@ -21,7 +21,7 @@ services:
       MYSQL_USER: source_control
       MYSQL_PASSWORD: source_control_password
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
       start_period: 30s
@@ -29,28 +29,24 @@ services:
       timeout: 5s
       retries: 55
 
-
   mysql-seed-db:
     build:
       dockerfile: dbseed.Dockerfile
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: seed_root_password
-      MYSQL_USER: seeded_user
-      MYSQL_PASSWORD: mysql_password
-    volumes:
-      - mysql_test_data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      start_period: 30s
+      interval: 5s
+      timeout: 5s
+      retries: 55
 
-  postgres-test-db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: test_postgres_password
-      POSTGRES_DB: pg-connection-source-control
-    volumes:
-      - postgres_test_data:/var/lib/postgresql/data
+  db-seed-pg:
+    image: mcekovic/uts-database
+    restart: unless-stopped
+    ports:
+      - 5433:5432
 
 volumes:
-  mysql_test_data:
-  postgres_test_data:
-  mysql_data:
+  db_data:
