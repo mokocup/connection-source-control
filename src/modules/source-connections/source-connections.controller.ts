@@ -59,7 +59,7 @@ export class SourceConnectionsController {
   async findAll(
     @Query('name') name?: string,
     @Query('hostname') hostname?: string,
-    @Query('type') type?: 'mysql' | 'postgresql',
+    @Query('type') type?: SupportedSourceConnectionType,
   ) {
     return this.sourceConnectionsService.findAll(name, hostname, type);
   }
@@ -89,13 +89,8 @@ export class SourceConnectionsController {
     required: false,
     description: 'Filter by source type',
   })
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @Query('name') name?: string,
-    @Query('hostname') hostname?: string,
-    @Query('type') type?: SupportedSourceConnectionType,
-  ) {
-    return this.sourceConnectionsService.findOne(id, name, hostname, type);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.sourceConnectionsService.findOne(id);
   }
 
   @Patch(':id')

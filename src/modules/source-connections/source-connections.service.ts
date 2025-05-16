@@ -3,10 +3,11 @@ import { CreateSourceDto } from './dto/create-source.dto';
 import { UpdateSourceDto } from './dto/update-source.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SourceConnection } from './entities/source-connection.entity';
-import { FindManyOptions, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { TestSourceDto } from './dto/test-source.dto';
 import { ConnectionService } from '../connection/connection.service';
 import { SupportedSourceConnectionType } from './source-connections.type';
+import { FindOptionsWhere } from 'typeorm/find-options/FindOptionsWhere';
 
 @Injectable()
 export class SourceConnectionsService {
@@ -31,8 +32,7 @@ export class SourceConnectionsService {
     hostname?: string,
     type?: SupportedSourceConnectionType,
   ): Promise<SourceConnection[]> {
-    const where: Partial<FindManyOptions<SourceConnection> & SourceConnection> =
-      {};
+    const where: FindOptionsWhere<SourceConnection> = {};
     if (name) {
       where.name = name;
     }
@@ -42,28 +42,15 @@ export class SourceConnectionsService {
     if (type) {
       where.type = type;
     }
-    return await this.sourceConnectionRepository.find(where);
+    return await this.sourceConnectionRepository.find({
+      where,
+    });
   }
 
-  async findOne(
-    id: number,
-    name?: string,
-    hostname?: string,
-    type?: SupportedSourceConnectionType,
-  ): Promise<SourceConnection> {
-    const where: Partial<FindManyOptions<SourceConnection> & SourceConnection> =
-      { id };
-    if (name) {
-      where.name = name;
-    }
-    if (hostname) {
-      where.host = hostname;
-    }
-    if (type) {
-      where.type = type;
-    }
-    const sourceConnection =
-      await this.sourceConnectionRepository.findOneBy(where);
+  async findOne(id: number): Promise<SourceConnection> {
+    const sourceConnection = await this.sourceConnectionRepository.findOneBy({
+      id,
+    });
     if (!sourceConnection) {
       throw new HttpException(
         'Source connection not found',
