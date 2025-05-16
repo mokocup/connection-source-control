@@ -29,7 +29,7 @@ export class SourceConnection {
   @Column()
   username: string;
 
-  @Column({ nullable: false })
+  @Column()
   @Exclude()
   password?: string;
 

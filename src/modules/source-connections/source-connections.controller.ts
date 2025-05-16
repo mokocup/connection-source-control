@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -8,6 +9,7 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { SourceConnectionsService } from './source-connections.service';
 import { CreateSourceDto } from './dto/create-source.dto';
@@ -17,6 +19,7 @@ import { ConnectionService } from '../connection/connection.service';
 import { ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { SupportedSourceConnectionType } from './source-connections.type';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('source-connections')
 export class SourceConnectionsController {
   constructor(
@@ -26,12 +29,11 @@ export class SourceConnectionsController {
 
   @Post()
   async create(@Body() createSourceConnectionDto: CreateSourceDto) {
-    const result = await this.sourceConnectionsService.create(
-      createSourceConnectionDto,
-    );
     // Ensure passwords are not included in responses.
     // Should use Interceptor with Class-transformer to filter the password but it overengineering for just one function
-    return { ...result, password: undefined };
+    return await this.sourceConnectionsService.create(
+      createSourceConnectionDto,
+    );
   }
 
   @Get()
@@ -107,13 +109,12 @@ export class SourceConnectionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSourceConnectionDto: UpdateSourceDto,
   ) {
-    const result = await this.sourceConnectionsService.update(
+    // Ensure passwords are not included in responses.
+    // Should use Interceptor with Class-transformer to filter the password but it overengineering for just one function
+    return await this.sourceConnectionsService.update(
       +id,
       updateSourceConnectionDto,
     );
-    // Ensure passwords are not included in responses.
-    // Should use Interceptor with Class-transformer to filter the password but it overengineering for just one function
-    return { ...result, password: undefined };
   }
 
   @Delete(':id')
@@ -151,7 +152,6 @@ export class SourceConnectionsController {
   }> {
     const source = await this.sourceConnectionsService.findOne(id);
 
-    // @ts-ignore
     return this.sourceConnectionsService.testConnection(source);
   }
 }

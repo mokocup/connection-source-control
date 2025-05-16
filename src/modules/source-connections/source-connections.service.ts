@@ -3,7 +3,7 @@ import { CreateSourceDto } from './dto/create-source.dto';
 import { UpdateSourceDto } from './dto/update-source.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SourceConnection } from './entities/source-connection.entity';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { TestSourceDto } from './dto/test-source.dto';
 import { ConnectionService } from '../connection/connection.service';
 import { SupportedSourceConnectionType } from './source-connections.type';
@@ -31,8 +31,8 @@ export class SourceConnectionsService {
     hostname?: string,
     type?: SupportedSourceConnectionType,
   ): Promise<SourceConnection[]> {
-    //  Do NOT return passwords.
-    const where: any = {};
+    const where: Partial<FindManyOptions<SourceConnection> & SourceConnection> =
+      {};
     if (name) {
       where.name = name;
     }
@@ -42,10 +42,7 @@ export class SourceConnectionsService {
     if (type) {
       where.type = type;
     }
-    const sources = await this.sourceConnectionRepository.find(where);
-    return sources.map((source) => {
-      return { ...source, password: undefined };
-    });
+    return await this.sourceConnectionRepository.find(where);
   }
 
   async findOne(
@@ -54,7 +51,8 @@ export class SourceConnectionsService {
     hostname?: string,
     type?: SupportedSourceConnectionType,
   ): Promise<SourceConnection> {
-    const where: any = { id };
+    const where: Partial<FindManyOptions<SourceConnection> & SourceConnection> =
+      { id };
     if (name) {
       where.name = name;
     }
@@ -120,7 +118,7 @@ export class SourceConnectionsService {
       throw new HttpException(
         {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: e?.message,
+          error: e?.message as string,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
         {

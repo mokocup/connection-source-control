@@ -1,13 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { TestSourceDto } from '../source-connections/dto/test-source.dto';
 import { createConnection } from 'mysql2/promise';
 import { SUPPORTED_SOURCE_CONNECTIONS } from '../../constant/constant';
 import { Client as PostgresClient } from 'pg';
 import * as format from 'pg-format';
+import { SourceData, SourceDetail } from './connection.interface';
 
 @Injectable()
 export class ConnectionService {
-  async testConnection(config: TestSourceDto): Promise<{
+  async testConnection(config: SourceDetail): Promise<{
     success: boolean;
     message: string;
     details?: any;
@@ -45,7 +45,7 @@ export class ConnectionService {
     };
   }
 
-  async getTables(config: TestSourceDto): Promise<string[]> {
+  async getTables(config: SourceDetail): Promise<string[]> {
     if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
       throw new HttpException(
         `Connection type not allowed`,
@@ -69,7 +69,7 @@ export class ConnectionService {
     return [];
   }
 
-  async _getTableSchemaMySql(config: TestSourceDto, tableName: string) {
+  async _getTableSchemaMySql(config: SourceDetail, tableName: string) {
     const connection = await createConnection({
       host: config.host,
       port: config.port,
@@ -86,7 +86,7 @@ export class ConnectionService {
     }));
   }
 
-  async _getTableSchemaPosgresql(config: TestSourceDto, tableName: string) {
+  async _getTableSchemaPosgresql(config: SourceDetail, tableName: string) {
     const client = new PostgresClient({
       host: config.host,
       port: config.port,
@@ -132,7 +132,7 @@ export class ConnectionService {
     });
   }
 
-  async getTableSchema(config: TestSourceDto, tableName: string) {
+  async getTableSchema(config: SourceDetail, tableName: string) {
     if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
       throw new HttpException(
         `Connection type not allowed`,
@@ -157,10 +157,10 @@ export class ConnectionService {
   }
 
   async getSampleData(
-    config: TestSourceDto,
+    config: SourceDetail,
     tableName: string,
     limit: number,
-  ): Promise<any[]> {
+  ): Promise<SourceData[]> {
     if (!SUPPORTED_SOURCE_CONNECTIONS.includes(config.type)) {
       throw new HttpException(
         `Connection type not allowed`,
@@ -185,7 +185,7 @@ export class ConnectionService {
   }
 
   async _getSampleDataMySql(
-    config: TestSourceDto,
+    config: SourceDetail,
     tableName: string,
     limit: number,
   ) {
@@ -205,7 +205,7 @@ export class ConnectionService {
   }
 
   async _getSampleDataPosgresql(
-    config: TestSourceDto,
+    config: SourceDetail,
     tableName: string,
     limit: number,
   ) {
@@ -228,7 +228,7 @@ export class ConnectionService {
     return result.rows;
   }
 
-  private async _testConnectionMySql(config: TestSourceDto) {
+  private async _testConnectionMySql(config: SourceDetail) {
     const connection = await createConnection({
       host: config.host,
       port: config.port,
@@ -299,7 +299,7 @@ export class ConnectionService {
     }
   }
 
-  private async _testConnectionPostgresql(config: TestSourceDto) {
+  private async _testConnectionPostgresql(config: SourceDetail) {
     // // TODO: Sanitized Schema Name since it send directly to config
     // const sanitizedSchema = config.schema;
     const client = new PostgresClient({
@@ -367,7 +367,7 @@ export class ConnectionService {
     return results;
   }
 
-  private async _getTablesMySql(config: TestSourceDto) {
+  private async _getTablesMySql(config: SourceDetail) {
     const connection = await createConnection({
       host: config.host,
       port: config.port,
@@ -385,7 +385,7 @@ export class ConnectionService {
     );
   }
 
-  private async _getTablesPostgresql(config: TestSourceDto) {
+  private async _getTablesPostgresql(config: SourceDetail) {
     const client = new PostgresClient({
       host: config.host,
       port: config.port,

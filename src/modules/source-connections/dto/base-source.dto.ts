@@ -23,10 +23,10 @@ export class BaseSourceDto {
   @ApiProperty()
   username: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   @ApiProperty()
-  password: string;
+  password?: string;
 
   @IsNotEmpty()
   @IsString()
