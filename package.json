@@ -24,7 +24,8 @@
     "typeorm:migration:create": "npm run typeorm -- migration:create src/database/migrations/$npm_config_name",
     "typeorm:migration:generate:win": "npm run typeorm -- -d typeorm.config.ts migration:generate ./src/database/migrations/%npm_config_name%",
     "typeorm:migration:create:win": "npm run typeorm -- migration:create src/database/migrations/%npm_config_name%",
-    "typeorm:migration:revert": "npm run typeorm -- -d typeorm.config.ts migration:revert"
+    "typeorm:migration:revert": "npm run typeorm -- -d typeorm.config.ts migration:revert",
+    "migrationandstart": "yarn typeorm:migration:run && yarn run nest start"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
