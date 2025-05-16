@@ -29,12 +29,14 @@ services:
       timeout: 5s
       retries: 55
 
-  mysql-test-db:
-    image: mysql:8.0
+
+  mysql-seed-db:
+    build:
+      dockerfile: dbseed.Dockerfile
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: test_root_password
-      MYSQL_DATABASE: mysql-connection-source-control
-      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: seed_root_password
+      MYSQL_USER: seeded_user
       MYSQL_PASSWORD: mysql_password
     volumes:
       - mysql_test_data:/var/lib/mysql
