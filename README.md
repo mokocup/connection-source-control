@@ -44,7 +44,7 @@ deleting source connections, as well as for retrieving lists of tables, table sc
 
 2. **Set up environment variables:**
 
-    - Copy`.env.example` file in the project root directory.
+    - Copy`.env.example` file in the project root directory to `.env`.
     - Modifying them as necessary for your local setup:
 
 3. **Start the databases and application using Docker Compose:**
@@ -61,7 +61,8 @@ deleting source connections, as well as for retrieving lists of tables, table sc
 
 ## Running the Application
 
-Once the Docker Compose setup is complete, the API will be running at `http://localhost:3000`.
+Once the Docker Compose setup is complete, the API will be running at `http://localhost:3000`, Adminer will be running
+at `http://localhost:3001`
 
 - **API:** The main API endpoints will be available at this address.
 - **Swagger:** The Swagger API documentation will be available at `http://localhost:3000/api`. You can use this to
