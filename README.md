@@ -76,7 +76,7 @@ The Docker Compose include seeding data for both MySQL and PostgreSQL databases.
 
 ```json
 {
-  "host": "db-seed-pg",
+  "host": "db-seed-mysql",
   "port": 3306,
   "username": "root",
   "password": "seed_root_password",
